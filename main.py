@@ -3,14 +3,11 @@ import requests
 import json
 import argparse
 from dotenv import load_dotenv
-load_dotenv()
 
-BITLY_TOKEN = os.getenv("BITLY_GENERIC_ACCESS_TOKEN_1")
 HOST = "https://api-ssl.bitly.com/"
 VERSION = "v4"
-domain = "bit.ly"
-
-description ='''
+DOMAIN = "bit.ly"
+DESCRIPTION ='''
 Bitly url shorterer is a program that lets you shorten long urls by BITLY URL shorten service via console commands.
 This program also counts clicks on user's short bit.ly links.
 '''
@@ -33,7 +30,7 @@ def shorten_link(token, url):
     payload = {
         "long_url": url,
         "group_guid": group_guid,
-        "domain": domain,
+        "domain": DOMAIN,
     }
     response = requests.post(shorten_address, headers=headers, json=payload)
     response.raise_for_status()
@@ -61,7 +58,9 @@ def count_clicks(token, link):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=description)
+    load_dotenv()
+    bitly_token = os.getenv("BITLY_GENERIC_ACCESS_TOKEN_1")
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('userlink', help='User URL')
     args = parser.parse_args()
     user_url = args.userlink
@@ -73,20 +72,18 @@ def main():
         user_url = "{}{}".format(user_url_head, user_url)
 
 
-    if user_url.startswith("https://{}".format(domain)):
+    if user_url.startswith("https://{}".format(DOMAIN)):
         try:
-            total_clicks = count_clicks(BITLY_TOKEN, user_url)
+            total_clicks = count_clicks(bitly_token, user_url)
         except requests.exceptions.HTTPError as http_error:
-            error_name = type(http_error).__name__
-            exit("{0}. Just leave, please... Or come again next time!".format(error_name))
+            exit("HTTPError. Just leave, please... Or come again next time!")
         print("Total clicks:", total_clicks)
 
     else:
         try:
-            bitlink = shorten_link(BITLY_TOKEN, user_url)
+            bitlink = shorten_link(bitly_token, user_url)
         except requests.exceptions.HTTPError as http_error:
-            error_name = type(http_error).__name__
-            exit("{0}. You gotta be kiddin' me, man. Bye...".format(error_name))
+            exit("HTTPError. You gotta be kiddin' me, man. Bye...")
         print("Here's your bitlink, gringo:", bitlink)
 
 
